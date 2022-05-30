@@ -116,7 +116,7 @@ namespace NOVACHSERVERNETFRAMEWORK
                             BeetwenPlanes(boxCollider, typePlane, new Vector3[] { Up.xyz1, Up.xyz2, Up.xyz3, Up.xyz4 }))
                         {
                             worldObjects.Add(worldObject as WorldObject);
-                            resultPosition.Y = boxCollider._worldObject.Position.Y - boxCollider._worldObject.Scale.Y / 2 - _worldObject.Scale.Y / 2;
+                            resultPosition.Y = boxCollider._worldObject.Position.Y - boxCollider._worldObject.Scale.Y / 2 - _worldObject.Scale.Y / 2 + 0.1f;
                         }
                         break;
                     case TypePlane.Down:
@@ -124,7 +124,7 @@ namespace NOVACHSERVERNETFRAMEWORK
                             BeetwenPlanes(boxCollider, typePlane, new Vector3[] { Back.xyz1, Back.xyz2, Back.xyz3, Back.xyz4 }
                             ))
                         {
-                            resultPosition.Y = boxCollider._worldObject.Position.Y + boxCollider._worldObject.Scale.Y / 2 + _worldObject.Scale.Y / 2;
+                            resultPosition.Y = boxCollider._worldObject.Position.Y + boxCollider._worldObject.Scale.Y / 2 + _worldObject.Scale.Y / 2 + 0.1f;
                             worldObjects.Add(worldObject as WorldObject);
                         }
                            

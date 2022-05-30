@@ -34,9 +34,9 @@ namespace NOVACHSERVERNETFRAMEWORK
     {
         public event ClientErrorHasOccurred OnClientError;
         private Stack<StackWorldObject> _stackWorldObjects=new Stack<StackWorldObject>();
-        private List<int> _createdWolrdObjectsUID = new List<int>();
         private NetworkStream _myNetworkStream;
-     
+        private int _countThreads = 0;
+        private const int MAX_COUNT_THREADS = 10;
         private byte[] _receivedBytes;
         private byte[] _sentBytes;
         public bool CanBeginRead { get; private set; }
@@ -46,8 +46,8 @@ namespace NOVACHSERVERNETFRAMEWORK
             CanBeginRead = true;
             OnClientError += HasClientError;
             ClearBytes();
-          
-            
+            BeginRead();
+
         }
         public void UpdateStackWorldObjects(StackWorldObject stackWorldObject)
         {
@@ -91,15 +91,10 @@ namespace NOVACHSERVERNETFRAMEWORK
             _receivedBytes = new byte[4096];
             _sentBytes = new byte[4096];
         }
-        protected void BeginWrite()
-        {
-            _myNetworkStream.BeginWrite(_sentBytes, 0, _sentBytes.Length, OnWriteToNetworkStream, null);
-        }
         protected void BeginRead()
         {
             try
             {
-               CanBeginRead = false;
                 _myNetworkStream.BeginRead(_receivedBytes, 0, _receivedBytes.Length, OnReadFromNetworkStream, null);
             }
             catch (Exception e)
@@ -107,11 +102,6 @@ namespace NOVACHSERVERNETFRAMEWORK
                 OnClientError?.Invoke(e, this);
             }
 
-        }
-        private void OnWriteToNetworkStream(IAsyncResult result)
-        {
-            _myNetworkStream.EndWrite(result);
-          
         }
         private void HasClientError(Exception exception,Client client)
         {
@@ -133,26 +123,13 @@ namespace NOVACHSERVERNETFRAMEWORK
         }
         public override void OnUpdated()
         {
-           
-            if (CanBeginRead)
-            {
-                CanBeginRead = false;
-                BeginRead();
-               
-            }
-           
+            Update();
         }
         private void SendFloatArray(float[] array)
         {
             _sentBytes = new byte[array.Length * 4];
             Buffer.BlockCopy(array, 0, _sentBytes, 0, _sentBytes.Length);
             _myNetworkStream.WriteAsync(_sentBytes, 0, _sentBytes.Length);
-        }
-        private void SendFloatArray(float[] array,byte[] buffer)
-        {
-            buffer = new byte[array.Length * 4];
-            Buffer.BlockCopy(array, 0, buffer, 0, buffer.Length);
-            _myNetworkStream.WriteAsync(buffer, 0, buffer.Length);
         }
         private void OnReadFromNetworkStream(IAsyncResult asyncResult)
         {
@@ -169,40 +146,10 @@ namespace NOVACHSERVERNETFRAMEWORK
                 switch (action)
                 {
                     case ClientAction.RenderingWorld:
-                        
-                        int countStack =0;
-                        int countStack2 = 0;
-                        if (_stackWorldObjects.Count == 0)
-                        {
-                            SendInt(0, false);
-                          
-                            break;
-                        }
-                          
                            List<float[]> floatArrays = GetDataStackObjectForRendering();
-                        List<float> floatArrays2 = new List<float>();
-                        bool isFull = false;
-
-                        SendInt(15 * 4 * floatArrays.Count,false);
-                        for (int i = 0; i < floatArrays.Count; i++)
-                        {
-                          
-                            countStack += 1;
-                            foreach (var item in floatArrays[i])
-                            {
-                                floatArrays2.Add(item);
-                            }
-                            if (countStack == 5||   i+1==floatArrays.Count)
-                            {
-                                SendInt(countStack, false);
-                                SendFloatArray(floatArrays2.ToArray());
-                                floatArrays2 = new List<float>();
-                                countStack = 0;
-                              
-                            }
-                          //  Thread.Sleep(100);
-                        }
-                       
+                        foreach (var item in floatArrays)
+                            SendFloatArray(item);
+                        SendFloatArray(new float[15]);
                         //     Update();
                         break;
                     case ClientAction.MoveForward:
@@ -235,6 +182,7 @@ namespace NOVACHSERVERNETFRAMEWORK
                         break;
                     case ClientAction.GetCameraPosition:
                         SendFloatArray(new float[] { Position.X, Position.Y, Position.Z });
+                        SendByte();
                         break;
                     case ClientAction.Jump:
                         Jump();
@@ -243,9 +191,8 @@ namespace NOVACHSERVERNETFRAMEWORK
                 }
                
                 ClearBytes();
-               
-                CanBeginRead = true;
                 stopwatch.Stop();
+                BeginRead();
                 TimeSpan ts = stopwatch.Elapsed;
                     Console.WriteLine("{0} time:{1}\n Action:{2}\n", Name, ts.Milliseconds, action);
                 

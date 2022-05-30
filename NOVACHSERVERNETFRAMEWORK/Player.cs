@@ -77,10 +77,10 @@ namespace NOVACHSERVERNETFRAMEWORK
         }
         public bool Move(Vector3 position,Vector3 rotation)
         {
-            //if (!_timerMove.TimeIsUp())
-            //{
-            //    return false;
-            //}
+            if (!_timerMove.TimeIsUp())
+            {
+                return false;
+            }
 
             position *= _moveSpeed;
            
@@ -89,14 +89,14 @@ namespace NOVACHSERVERNETFRAMEWORK
             Rotate = rotation;
             Vector3 test = Position;
 
-            //if (position.X > 0)
-            //    _boxCollider.CollisionPlane(TypePlane.Right, ref test);
-            //if (position.X < 0)
-            //    _boxCollider.CollisionPlane(TypePlane.Left, ref test);
-            //if (position.Z > 0)
-            //    _boxCollider.CollisionPlane(TypePlane.Forward, ref test);
-            //if (position.Z < 0)
-            //    _boxCollider.CollisionPlane(TypePlane.Back, ref test);
+            if (position.X > 0)
+                _boxCollider.CollisionPlane(TypePlane.Right, ref test);
+            if (position.X < 0)
+                _boxCollider.CollisionPlane(TypePlane.Left, ref test);
+            if (position.Z > 0)
+                _boxCollider.CollisionPlane(TypePlane.Forward, ref test);
+            if (position.Z < 0)
+                _boxCollider.CollisionPlane(TypePlane.Back, ref test);
             Position = test;
 
 
@@ -108,9 +108,9 @@ namespace NOVACHSERVERNETFRAMEWORK
         {
             if (_isJump)
             {
-                Position += new Vector3(0, 1, 0);
+                Position += new Vector3(0, 0.1f, 0);
                 Vector3 jumpVector = Position;
-                _jumpDistanceY -= 1;
+                _jumpDistanceY -= 0.1f;
                 if (_boxCollider.CollisionPlane(TypePlane.Down, ref jumpVector).Length != 0 || _jumpDistanceY <= 0)
                 {
                     _jumpDistanceY = MAX_JUMP_DISTANCE_Y;
