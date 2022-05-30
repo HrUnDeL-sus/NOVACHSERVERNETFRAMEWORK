@@ -34,9 +34,9 @@ namespace NOVACHSERVERNETFRAMEWORK
         {
             if (!_timerMove.TimeIsUp())
                 return;
-        //   _moveVector += new Vector3(0.1f, 0.1f, 0.1f);
-         //   Position += new Vector3((float)Math.Cos(_moveVector.X) * 100, (float)Math.Sin(_moveVector.Y)*100, (float)Math.Cos(_moveVector.Z)*100);
-        //    World.GetWorld().MoveWorldObject(this);
+           _moveVector += new Vector3(0.1f, 0.1f, 0.1f);
+            Position += new Vector3((float)Math.Cos(_moveVector.X) * 100, (float)Math.Sin(_moveVector.Y)*100, (float)Math.Cos(_moveVector.Z)*100);
+           World.GetWorld().MoveWorldObject(this);
         }
     }
 }

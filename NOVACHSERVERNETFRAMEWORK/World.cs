@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -53,7 +54,11 @@ namespace NOVACHSERVERNETFRAMEWORK
         {
             return _worldObjects.ToArray();
         }
-       
+        public Client GetClient(IPEndPoint iPEndPoint)
+        {
+            Client client = (_worldObjects.Find((t) => t is Client && (t as Client).MyIpEndPoint.Address.ToString() == iPEndPoint.Address.ToString()) as Client);
+            return client;
+        }
       
         public static World GetWorld()
         {
@@ -68,15 +73,23 @@ namespace NOVACHSERVERNETFRAMEWORK
         }
         public IBoxCollider[] GetWorldObjectsInRadiusWithBoxCollider(float R,Vector3 pos)
         {
-            List<IBoxCollider> worldObjectsInRadius = new List<IBoxCollider>();
-            foreach (WorldObject worldObject in _worldObjects)
+            try
             {
-                if (Math.Abs(worldObject.Position.Length - pos.Length) < R&& worldObject is IBoxCollider)
+                List<IBoxCollider> worldObjectsInRadius = new List<IBoxCollider>();
+                foreach (WorldObject worldObject in _worldObjects)
                 {
-                    worldObjectsInRadius.Add(worldObject as IBoxCollider);
+                    if (Math.Abs(worldObject.Position.Length - pos.Length) < R && worldObject is IBoxCollider)
+                    {
+                        worldObjectsInRadius.Add(worldObject as IBoxCollider);
+                    }
                 }
+                return worldObjectsInRadius.ToArray();
             }
-            return worldObjectsInRadius.ToArray();
+            catch
+            {
+                return null;
+            }
+            
         }
         public void MoveWorldObject(WorldObject worldObject)
         {

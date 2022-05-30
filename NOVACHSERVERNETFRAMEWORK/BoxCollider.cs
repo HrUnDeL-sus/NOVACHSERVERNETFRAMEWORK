@@ -86,7 +86,11 @@ namespace NOVACHSERVERNETFRAMEWORK
         {
             UpdatePoints();
             List<WorldObject> worldObjects = new List<WorldObject>();
-            foreach (IBoxCollider worldObject in World.GetWorld().GetWorldObjectsInRadiusWithBoxCollider(_worldObject.Scale.Length * 150, _worldObject.Position))
+            IBoxCollider[] worldObjectsCollider;
+            worldObjectsCollider = World.GetWorld().GetWorldObjectsInRadiusWithBoxCollider(_worldObject.Scale.Length * 150, _worldObject.Position);
+            if (worldObjectsCollider == null)
+                return worldObjects.ToArray();
+            foreach (IBoxCollider worldObject in worldObjectsCollider)
             {
                 BoxCollider boxCollider = worldObject.GetBoxCollider();
                 if (boxCollider == this)
@@ -116,7 +120,7 @@ namespace NOVACHSERVERNETFRAMEWORK
                             BeetwenPlanes(boxCollider, typePlane, new Vector3[] { Up.xyz1, Up.xyz2, Up.xyz3, Up.xyz4 }))
                         {
                             worldObjects.Add(worldObject as WorldObject);
-                            resultPosition.Y = boxCollider._worldObject.Position.Y - boxCollider._worldObject.Scale.Y / 2 - _worldObject.Scale.Y / 2;
+                            resultPosition.Y = boxCollider._worldObject.Position.Y - boxCollider._worldObject.Scale.Y / 2 - _worldObject.Scale.Y / 2+0.1f;
                         }
                         break;
                     case TypePlane.Down:
@@ -124,7 +128,7 @@ namespace NOVACHSERVERNETFRAMEWORK
                             BeetwenPlanes(boxCollider, typePlane, new Vector3[] { Back.xyz1, Back.xyz2, Back.xyz3, Back.xyz4 }
                             ))
                         {
-                            resultPosition.Y = boxCollider._worldObject.Position.Y + boxCollider._worldObject.Scale.Y / 2 + _worldObject.Scale.Y / 2;
+                            resultPosition.Y = boxCollider._worldObject.Position.Y + boxCollider._worldObject.Scale.Y / 2 + _worldObject.Scale.Y / 2 + 0.1f;
                             worldObjects.Add(worldObject as WorldObject);
                         }
                            
