@@ -10,7 +10,7 @@ namespace NOVACHSERVERNETFRAMEWORK
         static void Main(string[] args)
         {
             World.GetWorld();
-            World.GetWorld().AddWorldObject(new Platform(Vector3.Zero()));
+            World.GetWorld().AddWorldObject(new Platform());
             World.GetWorld().AddWorldObject(new Sun());
             new Thread(new ThreadStart(new Server().Start)).Start();
             new Thread(new ThreadStart(Timer.StartTimers)).Start();

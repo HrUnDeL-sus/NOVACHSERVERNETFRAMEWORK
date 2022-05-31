@@ -8,7 +8,7 @@ namespace NOVACHSERVERNETFRAMEWORK
 {
     internal class Physics
     {
-        private const float G = 2;
+        private const float G = 0.5f;
         private Timer _timerFall = new Timer(3);
         public Physics()
         {

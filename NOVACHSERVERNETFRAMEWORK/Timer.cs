@@ -34,13 +34,17 @@ namespace NOVACHSERVERNETFRAMEWORK
             _endTime = endTime;
             _timers.Add(this);
         }
+        public void Restart()
+        {
+            _startTime = 0;
+        }
         public bool TimeIsUp()
         {
           
             if (_endTime - _startTime <= 0)
             {
-                
-                _startTime = 0;
+
+                Restart();
                 return true;
             }
           

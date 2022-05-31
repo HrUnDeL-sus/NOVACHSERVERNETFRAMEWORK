@@ -11,7 +11,18 @@ namespace NOVACHSERVERNETFRAMEWORK
     {
         public static int Send<T>(this UdpClient udpClient, T value,IPEndPoint iPEndPoint)
         {
-            byte[] _sentBytes=new byte[0];
+            byte[] buffer = GetBytes(value);
+
+            return udpClient.Send(buffer, buffer.Length, iPEndPoint);
+        }
+        public static Task<int> SendAsync<T>(this UdpClient udpClient, T value, IPEndPoint iPEndPoint)
+        {
+            byte[] buffer = GetBytes(value);
+
+            return  udpClient.SendAsync(buffer, buffer.Length, iPEndPoint);
+        }
+        private static byte[] GetBytes<T>(T value) {
+            byte[] _sentBytes = new byte[0];
             if (value is int iI)
                 _sentBytes = BitConverter.GetBytes(Convert.ToInt32(iI));
             else if (value is float iF)
@@ -22,16 +33,17 @@ namespace NOVACHSERVERNETFRAMEWORK
             {
                 _sentBytes = new byte[iFArray.Length * 4];
                 Buffer.BlockCopy(iFArray, 0, _sentBytes, 0, _sentBytes.Length);
-            }else if(value is int[] iIArray)
+            }
+            else if (value is int[] iIArray)
             {
                 _sentBytes = new byte[iIArray.Length * 4];
                 Buffer.BlockCopy(iIArray, 0, _sentBytes, 0, _sentBytes.Length);
             }
             else
             {
-                throw new Exception("Error convert "+value.GetType()+" to byte array");
+                throw new Exception("Error convert " + value.GetType() + " to byte array");
             }
-           return udpClient.Send(_sentBytes, _sentBytes.Length, iPEndPoint);
+            return _sentBytes;
         }
         public static T Receive<T>(this UdpClient udpClient,ref IPEndPoint iPEndPoint)
         {

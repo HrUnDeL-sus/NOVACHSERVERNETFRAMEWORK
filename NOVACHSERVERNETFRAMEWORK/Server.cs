@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
+
 namespace NOVACHSERVERNETFRAMEWORK
 {
     internal class Server
@@ -23,33 +25,24 @@ namespace NOVACHSERVERNETFRAMEWORK
                     _udpClient.BeginReceive(EndReceive, null);
                     _countUDPClient += 1;
                 }
-                
+                Thread.Sleep(1);
 
 
             }
         }
         private void EndReceive(IAsyncResult res)
         {
-            try
+            IPEndPoint iPEndPoint = default;
+           int state=BitConverter.ToInt32(_udpClient.EndReceive(res, ref iPEndPoint),0);
+            Client client = World.GetWorld().GetClient(iPEndPoint);
+            if ( client == null)
             {
-                IPEndPoint iPEndPoint = null;
-                byte[] vs = _udpClient.EndReceive(res, ref iPEndPoint);
-                int state = BitConverter.ToInt32(vs, 0);
-                if (state == (int)ClientAction.Connect)
-                {
-                    Client get = new Client(iPEndPoint);
-                    _udpClient.Send(get.UID, iPEndPoint);
-                    World.GetWorld().AddWorldObject(get);
-                }
-                else
-                    World.GetWorld().GetClient(iPEndPoint).GetState(state, _udpClient, iPEndPoint);
+                client = new Client(iPEndPoint);
+                World.GetWorld().AddWorldObject(client);
             }
-            finally
-            {
-                _countUDPClient -= 1;
-            }
-           
-           
+            if(client!=null)
+                client.ReadState(state, _udpClient);
+            _countUDPClient -= 1;
         }
     }
    

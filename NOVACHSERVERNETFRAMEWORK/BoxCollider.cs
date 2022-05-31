@@ -53,7 +53,6 @@ namespace NOVACHSERVERNETFRAMEWORK
         public BoxCollider(WorldObject get)
         {
             _worldObject = get;
-            UpdatePoints();
         }
         private bool BeetwenPlanes(BoxCollider boxCollider,TypePlane typePlane, Vector3[] vector3)
         {
@@ -63,17 +62,22 @@ namespace NOVACHSERVERNETFRAMEWORK
                 {
                     case TypePlane.Right:
                     case TypePlane.Left:
-                        if(item.X >= boxCollider.Left.xyz2.X && item.X <= boxCollider.Right.xyz2.X && item.Y >= boxCollider.Right.xyz1.Y && item.Y <= boxCollider.Right.xyz3.Y && item.Z >= boxCollider.Right.xyz1.Z && item.Z <= boxCollider.Right.xyz3.Z)
+                        if (item.X >= boxCollider.Left.xyz2.X && item.X <= boxCollider.Right.xyz2.X && item.Y >= boxCollider.Right.xyz1.Y && item.Y <= boxCollider.Right.xyz3.Y && item.Z >= boxCollider.Right.xyz1.Z && item.Z <= boxCollider.Right.xyz3.Z)
                             return true;
                         break;
                     case TypePlane.Up:
+                        if ((item.Y > boxCollider.Down.xyz2.Y && item.Y < boxCollider.Up.xyz2.Y && item.X > boxCollider.Up.xyz1.X && item.X < boxCollider.Up.xyz3.X && item.Z > boxCollider.Up.xyz1.Z && item.Z < boxCollider.Up.xyz3.Z)
+                           && Math.Abs(item.Y - boxCollider.Down.xyz2.Y) < 0.5f)
+                            return true;
+                        break;
                     case TypePlane.Down:
-                        if (item.Y >= boxCollider.Down.xyz2.Y && item.Y <= boxCollider.Up.xyz2.Y && item.X >= boxCollider.Up.xyz1.X && item.X <= boxCollider.Up.xyz3.X && item.Z >= boxCollider.Up.xyz1.Z && item.Z <= boxCollider.Up.xyz3.Z)
+                        if ((item.Y >= boxCollider.Down.xyz2.Y && item.Y <= boxCollider.Up.xyz2.Y && item.X >= boxCollider.Up.xyz1.X && item.X <= boxCollider.Up.xyz3.X && item.Z >= boxCollider.Up.xyz1.Z && item.Z <= boxCollider.Up.xyz3.Z)
+                            && Math.Abs(item.Y - boxCollider.Up.xyz2.Y) < 0.5f)
                             return true;
                         break;
                     case TypePlane.Back:
                     case TypePlane.Forward:
-                        if(item.Z >= boxCollider.Back.xyz2.Z && item.Z <= boxCollider.Forward.xyz2.Z && item.Y >= boxCollider.Back.xyz1.Y && item.Y <= boxCollider.Back.xyz3.Y && item.X >= boxCollider.Back.xyz1.X && item.X <= boxCollider.Back.xyz3.X)
+                        if (item.Z >= boxCollider.Back.xyz2.Z && item.Z <= boxCollider.Forward.xyz2.Z && item.Y >= boxCollider.Back.xyz1.Y && item.Y <= boxCollider.Back.xyz3.Y && item.X >= boxCollider.Back.xyz1.X && item.X <= boxCollider.Back.xyz3.X)
                             return true;
                         break;
 
@@ -82,9 +86,9 @@ namespace NOVACHSERVERNETFRAMEWORK
             }
             return false;
         }
-        public WorldObject[] CollisionPlane(TypePlane typePlane,ref Vector3 resultPosition)
+        public WorldObject[] CollisionPlane(TypePlane typePlane,ref Vector3 resultPosition,Vector3 position=null)
         {
-            UpdatePoints();
+            UpdatePoints(position==null?_worldObject.Position:position);
             List<WorldObject> worldObjects = new List<WorldObject>();
             IBoxCollider[] worldObjectsCollider;
             worldObjectsCollider = World.GetWorld().GetWorldObjectsInRadiusWithBoxCollider(_worldObject.Scale.Length * 150, _worldObject.Position);
@@ -95,7 +99,7 @@ namespace NOVACHSERVERNETFRAMEWORK
                 BoxCollider boxCollider = worldObject.GetBoxCollider();
                 if (boxCollider == this)
                     continue;
-                boxCollider.UpdatePoints();
+                boxCollider.UpdatePoints(boxCollider._worldObject.Position);
                 switch (typePlane)
                 {
                     case TypePlane.Right:
@@ -120,7 +124,7 @@ namespace NOVACHSERVERNETFRAMEWORK
                             BeetwenPlanes(boxCollider, typePlane, new Vector3[] { Up.xyz1, Up.xyz2, Up.xyz3, Up.xyz4 }))
                         {
                             worldObjects.Add(worldObject as WorldObject);
-                            resultPosition.Y = boxCollider._worldObject.Position.Y - boxCollider._worldObject.Scale.Y / 2 - _worldObject.Scale.Y / 2+0.1f;
+                            resultPosition.Y = boxCollider._worldObject.Position.Y - boxCollider._worldObject.Scale.Y / 2 - _worldObject.Scale.Y / 2-0.1f;
                         }
                         break;
                     case TypePlane.Down:
@@ -158,44 +162,44 @@ namespace NOVACHSERVERNETFRAMEWORK
             }
             return worldObjects.ToArray();
         }
-        private void UpdatePoints()
+        private void UpdatePoints(Vector3 position)
         {
             
             Back = new Plane(new Vector3[] {
-                new Vector3(_worldObject.Position.X-_worldObject.Scale.X/2, _worldObject.Position.Y - _worldObject.Scale.Y / 2, _worldObject.Position.Z - _worldObject.Scale.Z / 2),
-                new Vector3(_worldObject.Position.X - _worldObject.Scale.X / 2, _worldObject.Position.Y + _worldObject.Scale.Y / 2, _worldObject.Position.Z - _worldObject.Scale.Z / 2),
-                new Vector3(_worldObject.Position.X + _worldObject.Scale.X / 2, _worldObject.Position.Y + _worldObject.Scale.Y / 2, _worldObject.Position.Z - _worldObject.Scale.Z / 2),
-                new Vector3(_worldObject.Position.X + _worldObject.Scale.X / 2, _worldObject.Position.Y - _worldObject.Scale.Y / 2, _worldObject.Position.Z - _worldObject.Scale.Z / 2)
+                new Vector3(position.X-_worldObject.Scale.X/2, position.Y - _worldObject.Scale.Y / 2, position.Z - _worldObject.Scale.Z / 2),
+                new Vector3(position.X - _worldObject.Scale.X / 2, position.Y + _worldObject.Scale.Y / 2, position.Z - _worldObject.Scale.Z / 2),
+                new Vector3(position.X + _worldObject.Scale.X / 2, position.Y + _worldObject.Scale.Y / 2, position.Z - _worldObject.Scale.Z / 2),
+                new Vector3(position.X + _worldObject.Scale.X / 2, position.Y - _worldObject.Scale.Y / 2, position.Z - _worldObject.Scale.Z / 2)
             });
             Forward = new Plane(new Vector3[] {
-                new Vector3(_worldObject.Position.X-_worldObject.Scale.X/2, _worldObject.Position.Y - _worldObject.Scale.Y / 2, _worldObject.Position.Z + _worldObject.Scale.Z / 2),
-                new Vector3(_worldObject.Position.X - _worldObject.Scale.X / 2, _worldObject.Position.Y + _worldObject.Scale.Y / 2, _worldObject.Position.Z + _worldObject.Scale.Z / 2),
-                new Vector3(_worldObject.Position.X + _worldObject.Scale.X / 2, _worldObject.Position.Y + _worldObject.Scale.Y / 2, _worldObject.Position.Z + _worldObject.Scale.Z / 2),
-                new Vector3(_worldObject.Position.X + _worldObject.Scale.X / 2, _worldObject.Position.Y - _worldObject.Scale.Y / 2, _worldObject.Position.Z + _worldObject.Scale.Z / 2)
+                new Vector3(position.X-_worldObject.Scale.X/2, position.Y - _worldObject.Scale.Y / 2, position.Z + _worldObject.Scale.Z / 2),
+                new Vector3(position.X - _worldObject.Scale.X / 2, position.Y + _worldObject.Scale.Y / 2, position.Z + _worldObject.Scale.Z / 2),
+                new Vector3(position.X + _worldObject.Scale.X / 2, position.Y + _worldObject.Scale.Y / 2, position.Z + _worldObject.Scale.Z / 2),
+                new Vector3(position.X + _worldObject.Scale.X / 2, position.Y - _worldObject.Scale.Y / 2, position.Z + _worldObject.Scale.Z / 2)
             });
             Up = new Plane(new Vector3[] {
-                new Vector3(_worldObject.Position.X-_worldObject.Scale.X/2, _worldObject.Position.Y + _worldObject.Scale.Y / 2, _worldObject.Position.Z - _worldObject.Scale.Z / 2),
-                new Vector3(_worldObject.Position.X - _worldObject.Scale.X / 2, _worldObject.Position.Y + _worldObject.Scale.Y / 2, _worldObject.Position.Z + _worldObject.Scale.Z / 2),
-                new Vector3(_worldObject.Position.X + _worldObject.Scale.X / 2, _worldObject.Position.Y + _worldObject.Scale.Y / 2, _worldObject.Position.Z + _worldObject.Scale.Z / 2),
-                new Vector3(_worldObject.Position.X + _worldObject.Scale.X / 2, _worldObject.Position.Y + _worldObject.Scale.Y / 2, _worldObject.Position.Z - _worldObject.Scale.Z / 2)
+                new Vector3(position.X-_worldObject.Scale.X/2, position.Y + _worldObject.Scale.Y / 2, position.Z - _worldObject.Scale.Z / 2),
+                new Vector3(position.X - _worldObject.Scale.X / 2, position.Y + _worldObject.Scale.Y / 2, position.Z + _worldObject.Scale.Z / 2),
+                new Vector3(position.X + _worldObject.Scale.X / 2, position.Y + _worldObject.Scale.Y / 2, position.Z + _worldObject.Scale.Z / 2),
+                new Vector3(position.X + _worldObject.Scale.X / 2, position.Y + _worldObject.Scale.Y / 2, position.Z - _worldObject.Scale.Z / 2)
             });
             Down = new Plane(new Vector3[] {
-                new Vector3(_worldObject.Position.X-_worldObject.Scale.X/2, _worldObject.Position.Y - _worldObject.Scale.Y / 2, _worldObject.Position.Z - _worldObject.Scale.Z / 2),
-                new Vector3(_worldObject.Position.X - _worldObject.Scale.X / 2, _worldObject.Position.Y - _worldObject.Scale.Y / 2, _worldObject.Position.Z + _worldObject.Scale.Z / 2),
-                new Vector3(_worldObject.Position.X + _worldObject.Scale.X / 2, _worldObject.Position.Y - _worldObject.Scale.Y / 2, _worldObject.Position.Z + _worldObject.Scale.Z / 2),
-                new Vector3(_worldObject.Position.X + _worldObject.Scale.X / 2, _worldObject.Position.Y - _worldObject.Scale.Y / 2, _worldObject.Position.Z - _worldObject.Scale.Z / 2)
+                new Vector3(position.X-_worldObject.Scale.X/2, position.Y - _worldObject.Scale.Y / 2, position.Z - _worldObject.Scale.Z / 2),
+                new Vector3(position.X - _worldObject.Scale.X / 2, position.Y - _worldObject.Scale.Y / 2, position.Z + _worldObject.Scale.Z / 2),
+                new Vector3(position.X + _worldObject.Scale.X / 2, position.Y - _worldObject.Scale.Y / 2, position.Z + _worldObject.Scale.Z / 2),
+                new Vector3(position.X + _worldObject.Scale.X / 2, position.Y - _worldObject.Scale.Y / 2, position.Z - _worldObject.Scale.Z / 2)
             });
             Left = new Plane(new Vector3[] {
-                new Vector3(_worldObject.Position.X-_worldObject.Scale.X/2, _worldObject.Position.Y - _worldObject.Scale.Y / 2, _worldObject.Position.Z - _worldObject.Scale.Z / 2),
-                new Vector3(_worldObject.Position.X - _worldObject.Scale.X / 2, _worldObject.Position.Y - _worldObject.Scale.Y / 2, _worldObject.Position.Z + _worldObject.Scale.Z / 2),
-                new Vector3(_worldObject.Position.X - _worldObject.Scale.X / 2, _worldObject.Position.Y + _worldObject.Scale.Y / 2, _worldObject.Position.Z + _worldObject.Scale.Z / 2),
-                new Vector3(_worldObject.Position.X - _worldObject.Scale.X / 2, _worldObject.Position.Y + _worldObject.Scale.Y / 2, _worldObject.Position.Z - _worldObject.Scale.Z / 2)
+                new Vector3(position.X-_worldObject.Scale.X/2, position.Y - _worldObject.Scale.Y / 2, position.Z - _worldObject.Scale.Z / 2),
+                new Vector3(position.X - _worldObject.Scale.X / 2, position.Y - _worldObject.Scale.Y / 2, position.Z + _worldObject.Scale.Z / 2),
+                new Vector3(position.X - _worldObject.Scale.X / 2, position.Y + _worldObject.Scale.Y / 2, position.Z + _worldObject.Scale.Z / 2),
+                new Vector3(position.X - _worldObject.Scale.X / 2, position.Y + _worldObject.Scale.Y / 2, position.Z - _worldObject.Scale.Z / 2)
             });
             Right = new Plane(new Vector3[] {
-                new Vector3(_worldObject.Position.X+_worldObject.Scale.X/2, _worldObject.Position.Y - _worldObject.Scale.Y / 2, _worldObject.Position.Z - _worldObject.Scale.Z / 2),
-                new Vector3(_worldObject.Position.X + _worldObject.Scale.X / 2, _worldObject.Position.Y - _worldObject.Scale.Y / 2, _worldObject.Position.Z + _worldObject.Scale.Z / 2),
-                new Vector3(_worldObject.Position.X + _worldObject.Scale.X / 2, _worldObject.Position.Y + _worldObject.Scale.Y / 2, _worldObject.Position.Z + _worldObject.Scale.Z / 2),
-                new Vector3(_worldObject.Position.X + _worldObject.Scale.X / 2, _worldObject.Position.Y + _worldObject.Scale.Y / 2, _worldObject.Position.Z - _worldObject.Scale.Z / 2)
+                new Vector3(position.X+_worldObject.Scale.X/2, position.Y - _worldObject.Scale.Y / 2, position.Z - _worldObject.Scale.Z / 2),
+                new Vector3(position.X + _worldObject.Scale.X / 2, position.Y - _worldObject.Scale.Y / 2, position.Z + _worldObject.Scale.Z / 2),
+                new Vector3(position.X + _worldObject.Scale.X / 2, position.Y + _worldObject.Scale.Y / 2, position.Z + _worldObject.Scale.Z / 2),
+                new Vector3(position.X + _worldObject.Scale.X / 2, position.Y + _worldObject.Scale.Y / 2, position.Z - _worldObject.Scale.Z / 2)
             });
           
 

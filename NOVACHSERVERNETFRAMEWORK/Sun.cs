@@ -8,12 +8,11 @@ namespace NOVACHSERVERNETFRAMEWORK
 {
     internal class Sun : WorldObject
     {
-        private static Sun _sun;
-        private Timer _timerMove = new Timer(10);
-        private Vector3 _moveVector = Vector3.Zero();
+        private Timer _timerMove = new Timer(30);
+        private Vector3 _moveVector = new Vector3(0.1f,0.1f, 0.1f);
         public Sun() : base(TypeWorldObject.Sun)
         {
-            Position = new Vector3(0, -5, 0);
+            Position = new Vector3(0, -50, 0);
             Color.X = 1;
             Color.Y = 0.5f;
             Color.Z = 1;
@@ -34,9 +33,9 @@ namespace NOVACHSERVERNETFRAMEWORK
         {
             if (!_timerMove.TimeIsUp())
                 return;
-           _moveVector += new Vector3(0.1f, 0.1f, 0.1f);
-            Position += new Vector3((float)Math.Cos(_moveVector.X) * 100, (float)Math.Sin(_moveVector.Y)*100, (float)Math.Cos(_moveVector.Z)*100);
-           World.GetWorld().MoveWorldObject(this);
+            _moveVector += Vector3.One() * 0.1f;
+            Position += new Vector3((float)Math.Cos(_moveVector.X) * 10, (float)Math.Sin(_moveVector.Y) * 10, (float)Math.Cos(_moveVector.Z) * 10);
+            World.GetWorld().MoveWorldObject(this);
         }
     }
 }

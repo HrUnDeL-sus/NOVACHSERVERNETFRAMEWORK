@@ -13,19 +13,21 @@ namespace NOVACHSERVERNETFRAMEWORK
         Player,
         Platform,
         Box,
-        Sun
+        Sun,
+        Bullet,
+        None
     }
     abstract class WorldObject
     {
         public readonly int UID;
-        private Vector3 _position;
-        private Vector3 _scale;
-        private Vector3 _rotate;
-        private Vector3 _color;
-        public Vector3 Position { get; protected set; }
-        public Vector3 Scale { get; protected set; }
-        public Vector3 Rotate { get; protected set; }
-        public Vector3 Color { get; protected set; }
+        protected Vector3 position;
+        protected Vector3 scale;
+        protected Vector3 color;
+        protected Vector3 rotate;
+        public Vector3 Position { get=>position; protected set=>position=value; }
+        public  Vector3 Scale { get => scale; protected set=>scale=value; }
+        public Vector3 Rotate { get => rotate; protected set=> rotate = value; }
+        public  Vector3 Color { get => color; protected set=>color=value; }
 
         public readonly TypeWorldObject MyTypeWorldObject;
         public readonly string Name;

@@ -9,10 +9,10 @@ namespace NOVACHSERVERNETFRAMEWORK
     internal class Platform : WorldObject,IBoxCollider
     {
         private BoxCollider _boxCollider;
-        public Platform(Vector3 get) : base(TypeWorldObject.Platform)
+        public Platform() : base(TypeWorldObject.Platform)
         {
-            Position = get-new Vector3(0,1,0);
-            Scale = new Vector3(100,1,100);
+            Position = new Vector3(0,-30,0);
+            Scale = new Vector3(100,20,100);
             Color.Y = (float)(new Random().NextDouble()+0.7);
             _boxCollider = new BoxCollider(this);
         }

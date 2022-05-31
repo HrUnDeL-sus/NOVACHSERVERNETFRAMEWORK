@@ -35,20 +35,17 @@ namespace NOVACHSERVERNETFRAMEWORK
         {
             return _worldObjects.Count;
         }
-        public void RemoveWorldObject(string name)
-        {
-            if (_worldObjects.Find((t) => t.Name == name) != null)
-                OnUpdateStackWorldObjects?.Invoke(new StackWorldObject(_worldObjects.Find((t) => t.Name == name), StateWorldObjectInStack.Deleted));
-            _worldObjects.Remove(_worldObjects.Find((t) => t.Name == name));
-           
-        }
         public void RemoveWorldObject(WorldObject worldObject)
         {
-         if(worldObject!=null)
-                OnUpdateStackWorldObjects?.Invoke(new StackWorldObject(worldObject, StateWorldObjectInStack.Deleted));
-           
             _worldObjects.Remove(worldObject);
-           
+            OnUpdated -= worldObject.OnUpdated;
+            if (worldObject is Client)
+                OnUpdateStackWorldObjects -= (worldObject as Client).UpdateStackWorldObjects;
+            OnUpdateStackWorldObjects?.Invoke(new StackWorldObject(worldObject, StateWorldObjectInStack.Deleted));
+          
+
+
+            Console.WriteLine("{0} destroy", worldObject.Name);
         }
         public WorldObject[] GetWorldObjects()
         {
@@ -56,7 +53,7 @@ namespace NOVACHSERVERNETFRAMEWORK
         }
         public Client GetClient(IPEndPoint iPEndPoint)
         {
-            Client client = (_worldObjects.Find((t) => t is Client && (t as Client).MyIpEndPoint.Address.ToString() == iPEndPoint.Address.ToString()) as Client);
+            Client client = _worldObjects.Find((t)=>t is Client&&(t as Client).MyIpEndPoint.Address.ToString()==iPEndPoint.Address.ToString()) as Client;
             return client;
         }
       
@@ -95,8 +92,6 @@ namespace NOVACHSERVERNETFRAMEWORK
         {
             if(_worldObjects.Contains(worldObject))
             OnUpdateStackWorldObjects?.Invoke(new StackWorldObject(worldObject, StateWorldObjectInStack.Updated));
-            else
-                GetWorld().AddWorldObject(worldObject);
         }
         public void AddWorldObject(WorldObject worldObject)
         {
