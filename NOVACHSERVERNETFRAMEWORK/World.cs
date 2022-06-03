@@ -75,7 +75,9 @@ namespace NOVACHSERVERNETFRAMEWORK
                 List<IBoxCollider> worldObjectsInRadius = new List<IBoxCollider>();
                 foreach (WorldObject worldObject in _worldObjects)
                 {
-                    if (Math.Abs(worldObject.Position.Length - pos.Length) < R && worldObject is IBoxCollider)
+                    if (worldObject == null)
+                        continue;
+                    if (Math.Abs(worldObject.Position.Length - pos.Length-worldObject.Scale.Length) < R && worldObject is IBoxCollider)
                     {
                         worldObjectsInRadius.Add(worldObject as IBoxCollider);
                     }

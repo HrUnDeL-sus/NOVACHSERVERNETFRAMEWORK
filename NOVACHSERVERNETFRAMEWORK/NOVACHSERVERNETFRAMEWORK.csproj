@@ -60,6 +60,7 @@
   <ItemGroup>
     <Compile Include="Box.cs" />
     <Compile Include="BoxCollider.cs" />
+    <Compile Include="Bullet.cs" />
     <Compile Include="Client.cs" />
     <Compile Include="IBoxCollider.cs" />
     <Compile Include="MathHelper.cs" />

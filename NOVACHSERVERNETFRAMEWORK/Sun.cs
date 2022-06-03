@@ -10,7 +10,7 @@ namespace NOVACHSERVERNETFRAMEWORK
     {
         private Timer _timerMove = new Timer(30);
         private Vector3 _moveVector = new Vector3(0.1f,0.1f, 0.1f);
-        public Sun() : base(TypeWorldObject.Sun)
+        public Sun() : base(TypeWorldObject.Sun,1000)
         {
             Position = new Vector3(0, -50, 0);
             Color.X = 1;

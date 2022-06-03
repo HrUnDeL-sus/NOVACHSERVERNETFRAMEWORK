@@ -67,12 +67,12 @@ namespace NOVACHSERVERNETFRAMEWORK
                         break;
                     case TypePlane.Up:
                         if ((item.Y > boxCollider.Down.xyz2.Y && item.Y < boxCollider.Up.xyz2.Y && item.X > boxCollider.Up.xyz1.X && item.X < boxCollider.Up.xyz3.X && item.Z > boxCollider.Up.xyz1.Z && item.Z < boxCollider.Up.xyz3.Z)
-                           && Math.Abs(item.Y - boxCollider.Down.xyz2.Y) < 0.5f)
+                           && Math.Abs(item.Y - boxCollider.Down.xyz2.Y) < 0.6f)
                             return true;
                         break;
                     case TypePlane.Down:
                         if ((item.Y >= boxCollider.Down.xyz2.Y && item.Y <= boxCollider.Up.xyz2.Y && item.X >= boxCollider.Up.xyz1.X && item.X <= boxCollider.Up.xyz3.X && item.Z >= boxCollider.Up.xyz1.Z && item.Z <= boxCollider.Up.xyz3.Z)
-                            && Math.Abs(item.Y - boxCollider.Up.xyz2.Y) < 0.5f)
+                            && Math.Abs(item.Y - boxCollider.Up.xyz2.Y) < 0.6f)
                             return true;
                         break;
                     case TypePlane.Back:
@@ -86,18 +86,51 @@ namespace NOVACHSERVERNETFRAMEWORK
             }
             return false;
         }
-        public WorldObject[] CollisionPlane(TypePlane typePlane,ref Vector3 resultPosition,Vector3 position=null)
+        public bool HasAnyCollisionPlaneBool()
+        {
+            Vector3 vector3 = Vector3.Zero();
+            return HasCollisionPlane(TypePlane.Up, ref vector3).Length != 0 ||
+                HasCollisionPlane(TypePlane.Down, ref vector3).Length != 0 ||
+                HasCollisionPlane(TypePlane.Left, ref vector3).Length != 0 ||
+                HasCollisionPlane(TypePlane.Right, ref vector3).Length != 0 ||
+                HasCollisionPlane(TypePlane.Forward, ref vector3).Length != 0 ||
+                HasCollisionPlane(TypePlane.Back, ref vector3).Length != 0;
+        }
+        public WorldObject[] HasAnyCollisionPlaneArray()
+        {
+            Vector3 vector3 = Vector3.Zero();
+            List<WorldObject[]> allWorldObjects = new List<WorldObject[]>();
+            allWorldObjects.Add(HasCollisionPlane(TypePlane.Up, ref vector3));
+            allWorldObjects.Add(HasCollisionPlane(TypePlane.Up, ref vector3));
+            allWorldObjects.Add(HasCollisionPlane(TypePlane.Down, ref vector3));
+            allWorldObjects.Add(HasCollisionPlane(TypePlane.Left, ref vector3));
+            allWorldObjects.Add(HasCollisionPlane(TypePlane.Right, ref vector3));
+            allWorldObjects.Add(HasCollisionPlane(TypePlane.Forward, ref vector3));
+            allWorldObjects.Add(HasCollisionPlane(TypePlane.Back, ref vector3));
+            List<WorldObject> result = new List<WorldObject>();
+            foreach (var item in allWorldObjects)
+            {
+
+                if (item == null)
+                    continue;
+                foreach (var item2 in item)
+                    result.Add(item2);
+            }
+            result=result.Distinct().ToList();
+            return result.ToArray();
+        }
+        public WorldObject[] HasCollisionPlane(TypePlane typePlane,ref Vector3 resultPosition,Vector3 position=null)
         {
             UpdatePoints(position==null?_worldObject.Position:position);
             List<WorldObject> worldObjects = new List<WorldObject>();
             IBoxCollider[] worldObjectsCollider;
-            worldObjectsCollider = World.GetWorld().GetWorldObjectsInRadiusWithBoxCollider(_worldObject.Scale.Length * 150, _worldObject.Position);
+            worldObjectsCollider = World.GetWorld().GetWorldObjectsInRadiusWithBoxCollider(_worldObject.Scale.Length * 100, _worldObject.Position);
             if (worldObjectsCollider == null)
                 return worldObjects.ToArray();
             foreach (IBoxCollider worldObject in worldObjectsCollider)
             {
                 BoxCollider boxCollider = worldObject.GetBoxCollider();
-                if (boxCollider == this)
+                if (boxCollider == this||boxCollider==null)
                     continue;
                 boxCollider.UpdatePoints(boxCollider._worldObject.Position);
                 switch (typePlane)

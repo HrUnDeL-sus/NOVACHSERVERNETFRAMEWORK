@@ -18,12 +18,11 @@ namespace NOVACHSERVERNETFRAMEWORK
         MoveDown,
         MoveForward,
         MoveBack,
-        SetBlockSand,
+        Action,
         RotateLeft,
         RotateRight,
         GetCameraPosition,
-        Jump,
-        SetBlockWood
+        Jump
     }
     enum StateWorldObjectInStack
     {
@@ -36,7 +35,7 @@ namespace NOVACHSERVERNETFRAMEWORK
 
     internal class Client:Player
     {
-        public bool CanWrite = true;
+        public bool CanWrite { get; private set; }
         public event ClientErrorHasOccurred OnClientError;
         private Stack<StackWorldObject> _stackWorldObjects=new Stack<StackWorldObject>();
         public readonly IPEndPoint MyIpEndPoint;
@@ -46,11 +45,12 @@ namespace NOVACHSERVERNETFRAMEWORK
         {
             MyIpEndPoint = iPEndPoint;
             OnClientError += HasClientError;
-            _timerActive = new Timer(20);
+            _timerActive = new Timer(250);
+            CanWrite = true;
         }
         public void UpdateStackWorldObjects(StackWorldObject stackWorldObject)
         {
-           
+           if(_stackWorldObjects.Count>=0)
             _stackWorldObjects.Push(stackWorldObject);
         }
         private List<float[]> GetDataStackObjectForRendering()
@@ -81,9 +81,15 @@ namespace NOVACHSERVERNETFRAMEWORK
                 vs.Add(obj.Color.Z);
                 vs.Add((int)obj.MyTypeWorldObject);
                 vs.Add(obj.UID);
+
+                if (stackWorldObject.WorldObject is Player)
+                    vs.Add((stackWorldObject.WorldObject as Player).GetActiveAction());
+                else
+                    vs.Add(-1);
                 vs2.Add(vs.ToArray());
-                
+
             }
+          
             return vs2;
         }
         private void HasClientError(Exception exception,Client client)
@@ -99,61 +105,74 @@ namespace NOVACHSERVERNETFRAMEWORK
             }
             Update();
         }
-       
+        protected override void OnKilled()
+        {
+            Position = Vector3.Zero();
+            World.GetWorld().MoveWorldObject(this);
+        }
+
         public void ReadState(int state,UdpClient udpClient)
         {
             try
             {
+                CanWrite = false;
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start();
-                ClientAction action = (ClientAction)state;
                 _timerActive.Restart();
-                switch (action)
+                switch (state)
                 {
-                    case ClientAction.RenderingWorld:
+                    case (int)ClientAction.RenderingWorld:
                            List<float[]> floatArrays = GetDataStackObjectForRendering();
                         udpClient.SendAsync(new float[] {Position.X,Position.Y,Position.Z}, MyIpEndPoint);
-                        foreach (var item in floatArrays)
+                        for(int i = 0; i < floatArrays.Count; i += 1)
                         {
-                            int count = 0;
-                                count = udpClient.Send(item, MyIpEndPoint);
-                                Console.WriteLine("COUNT:{0}", count);
+                            udpClient.SendAsync(floatArrays[i], MyIpEndPoint);
                         }
-                           
-                        udpClient.SendAsync(new float[15], MyIpEndPoint);
+                        udpClient.SendAsync(new float[16], MyIpEndPoint);
                         //     Update();
                         break;
-                    case ClientAction.MoveForward:
+                    case (int)ClientAction.MoveForward:
                         Move(new Vector3(0, 0, 1), new Vector3(0, 180, 0));
                         break;
-                    case ClientAction.MoveBack:
+                    case (int)ClientAction.MoveBack:
                         Move(new Vector3(0, 0, -1), Vector3.Zero());
                         break;
-                    case ClientAction.MoveLeft:
+                    case (int)ClientAction.MoveLeft:
                         Move(new Vector3(-1, 0, 0),new Vector3(0,90,0));
                         break;
-                    case ClientAction.MoveRight:
+                    case (int)ClientAction.MoveRight:
                         Move(new Vector3(1, 0, 0), new Vector3(0, -90, 0));
                         break;
-                    case ClientAction.RotateLeft:
+                    case (int)ClientAction.RotateLeft:
                         Rotation(new Vector3(0, 90, 0));
                         break;
-                    case ClientAction.RotateRight:
+                    case (int)ClientAction.RotateRight:
                         Rotation(new Vector3(0, -90, 0));
                         break;
-                    case ClientAction.SetBlockSand:
-                        SetBlock(TypeBlock.Sand);
+                    case (int)ClientAction.Action:
+                        PerformAnAction();
                         break;
-                    case ClientAction.SetBlockWood:
-                        SetBlock(TypeBlock.Wood);
-                        break;
-                    case ClientAction.GetCameraPosition:
+                    case (int)ClientAction.GetCameraPosition:
                         
                        break;
-                    case ClientAction.Jump:
+                    case (int)ClientAction.Jump:
                         IsJump(true);
-
                         break;
+                    default:
+                        if (state >= 40 && state < 42)
+                        {
+                                SelectedBlock = (TypeBlock)(state - 40);
+                            MyActiveAction = ActiveAction.SetBlock;
+                            World.GetWorld().MoveWorldObject(this);
+                        }
+                        else if (state == 42)
+                        {
+                            MyActiveAction = ActiveAction.Shot;
+                            World.GetWorld().MoveWorldObject(this);
+                        }
+                            
+                        break;
+
                 }
                
 
@@ -161,8 +180,9 @@ namespace NOVACHSERVERNETFRAMEWORK
                
                 TimeSpan ts = stopwatch.Elapsed;
                
-                    Console.WriteLine("{0} time:{1}\n Action:{2}\n", Name, ts.Ticks, action);
+                    Console.WriteLine("{0} time:{1}\n Action:{2}\n", Name, ts.Ticks, (ClientAction)state);
                 CanWrite = true;
+              
             }
             catch (Exception e)
             {

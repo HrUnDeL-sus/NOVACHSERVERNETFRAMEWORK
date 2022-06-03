@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace NOVACHSERVERNETFRAMEWORK
 {
+    
     internal class Platform : WorldObject,IBoxCollider
     {
         private BoxCollider _boxCollider;
-        public Platform() : base(TypeWorldObject.Platform)
+        public Platform() : base(TypeWorldObject.Platform,(int)HealthEnum.Infinity)
         {
             Position = new Vector3(0,-30,0);
             Scale = new Vector3(100,20,100);

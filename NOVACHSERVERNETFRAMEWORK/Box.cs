@@ -12,7 +12,7 @@ namespace NOVACHSERVERNETFRAMEWORK
         private BoxCollider _boxCollider;
         public readonly bool IsPhysics = true;
 
-        public Box(Vector3 get,bool isPhysics) : base(TypeWorldObject.Box)
+        public Box(Vector3 get,bool isPhysics) : base(TypeWorldObject.Box, 80)
         {
             IsPhysics = isPhysics;
             Position = get;
@@ -53,13 +53,13 @@ namespace NOVACHSERVERNETFRAMEWORK
         {
             Vector3 vector3 = Vector3.Zero();
             if (pushVector3.X > 0)
-                PushBoxs(_boxCollider.CollisionPlane(TypePlane.Right, ref vector3), pushVector3);
+                PushBoxs(_boxCollider.HasCollisionPlane(TypePlane.Right, ref vector3), pushVector3);
             if (pushVector3.X < 0)
-                PushBoxs(_boxCollider.CollisionPlane(TypePlane.Left, ref vector3), pushVector3);
+                PushBoxs(_boxCollider.HasCollisionPlane(TypePlane.Left, ref vector3), pushVector3);
             if (pushVector3.Z > 0)
-                PushBoxs(_boxCollider.CollisionPlane(TypePlane.Forward, ref vector3), pushVector3);
+                PushBoxs(_boxCollider.HasCollisionPlane(TypePlane.Forward, ref vector3), pushVector3);
             if (pushVector3.Z < 0)
-                PushBoxs(_boxCollider.CollisionPlane(TypePlane.Back, ref vector3), pushVector3);
+                PushBoxs(_boxCollider.HasCollisionPlane(TypePlane.Back, ref vector3), pushVector3);
             Position -= pushVector3;
             World.GetWorld().MoveWorldObject(this);
         }
@@ -68,10 +68,10 @@ namespace NOVACHSERVERNETFRAMEWORK
             if (!IsPhysics)
                 return;
             Vector3 fallVector = Position;
-            if (_boxCollider.CollisionPlane(TypePlane.Down, ref fallVector).Length == 0 && _physics.Fall(ref fallVector))
+            if (_boxCollider.HasCollisionPlane(TypePlane.Down, ref fallVector).Length == 0 && _physics.Fall(ref fallVector))
             {
                 Position = fallVector;
-                _boxCollider.CollisionPlane(TypePlane.Down, ref fallVector);
+                _boxCollider.HasCollisionPlane(TypePlane.Down, ref fallVector);
                 Position = fallVector;
                 World.GetWorld().MoveWorldObject(this);
 

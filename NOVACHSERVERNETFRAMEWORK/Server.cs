@@ -14,7 +14,7 @@ namespace NOVACHSERVERNETFRAMEWORK
         private UdpClient _udpClient;
         private const int UDP_PORT = 1243;
         private int _countUDPClient = 0;
-        private const int MAX_COUNT_UDP_CLIENT = 15;
+        private const int MAX_COUNT_UDP_CLIENT = 5;
        public void Start()
         {
             _udpClient = new UdpClient(UDP_PORT);

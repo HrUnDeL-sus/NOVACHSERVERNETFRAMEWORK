@@ -17,23 +17,34 @@ namespace NOVACHSERVERNETFRAMEWORK
         Bullet,
         None
     }
+    public enum HealthEnum
+    {
+        Infinity=100000000
+    }
     abstract class WorldObject
     {
         public readonly int UID;
-        protected Vector3 position;
-        protected Vector3 scale;
-        protected Vector3 color;
-        protected Vector3 rotate;
-        public Vector3 Position { get=>position; protected set=>position=value; }
-        public  Vector3 Scale { get => scale; protected set=>scale=value; }
-        public Vector3 Rotate { get => rotate; protected set=> rotate = value; }
-        public  Vector3 Color { get => color; protected set=>color=value; }
+        private int _health;
+        public int Health
+        {
+            get => _health; private set
+            {
+                _health = value;
+                if (_health <= 0)
+                    OnKilled();
+            }
+        }
+        public Vector3 Position { get; protected set; }
+        public  Vector3 Scale { get; protected set; }
+        public Vector3 Rotate { get; protected set; }
+        public  Vector3 Color { get; protected set; }
 
         public readonly TypeWorldObject MyTypeWorldObject;
         public readonly string Name;
         protected readonly World MyWorld;
-        public WorldObject(TypeWorldObject get)
+        public WorldObject(TypeWorldObject get,int health)
         {
+            Health = health;
             Position = Vector3.Zero();
             Scale=Vector3.Zero();
             Rotate = Vector3.Zero();
@@ -43,6 +54,20 @@ namespace NOVACHSERVERNETFRAMEWORK
             Name = GetType().Name + UID;
             Console.WriteLine("NAME:{0}", Name);
             
+        }
+        protected virtual void OnKilled()
+        {
+            World.GetWorld().RemoveWorldObject(this);
+        }
+        public void Kill()
+        {
+            Health = 0;
+        }
+        public void Damage(int d)
+        {
+            if (Health == (int)HealthEnum.Infinity)
+                return;
+            Health -= d;
         }
         public abstract void OnMove();
         public abstract void OnScale();
