@@ -37,9 +37,6 @@ namespace NOVACHSERVERNETFRAMEWORK
             return _boxCollider;
         }
 
-        void IBoxCollider.OnUpdatedBoxCollider()
-        {
-            throw new NotImplementedException();
-        }
+       
     }
 }

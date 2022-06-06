@@ -13,7 +13,9 @@ namespace NOVACHSERVERNETFRAMEWORK
         Up,
         Down,
         Back,
-        Forward
+        Forward,
+        Center,
+        None
     }
     struct Plane
     {
@@ -61,26 +63,40 @@ namespace NOVACHSERVERNETFRAMEWORK
                 switch (typePlane)
                 {
                     case TypePlane.Right:
+                        if ((item.X >= boxCollider.Left.xyz2.X && item.X <= boxCollider.Right.xyz2.X && item.Y >= boxCollider.Right.xyz1.Y && item.Y <= boxCollider.Right.xyz3.Y && item.Z >= boxCollider.Right.xyz1.Z && item.Z <= boxCollider.Right.xyz3.Z)
+                         && Math.Abs(item.X - boxCollider.Left.xyz2.X) < 0.2f)
+                            return true;
+                        break;
                     case TypePlane.Left:
-                        if (item.X >= boxCollider.Left.xyz2.X && item.X <= boxCollider.Right.xyz2.X && item.Y >= boxCollider.Right.xyz1.Y && item.Y <= boxCollider.Right.xyz3.Y && item.Z >= boxCollider.Right.xyz1.Z && item.Z <= boxCollider.Right.xyz3.Z)
+                        if ((item.X >= boxCollider.Left.xyz2.X && item.X <= boxCollider.Right.xyz2.X && item.Y >= boxCollider.Right.xyz1.Y && item.Y <= boxCollider.Right.xyz3.Y && item.Z >= boxCollider.Right.xyz1.Z && item.Z <= boxCollider.Right.xyz3.Z)
+                          && Math.Abs(item.X- boxCollider.Right.xyz2.X) < 0.2f)
                             return true;
                         break;
                     case TypePlane.Up:
-                        if ((item.Y > boxCollider.Down.xyz2.Y && item.Y < boxCollider.Up.xyz2.Y && item.X > boxCollider.Up.xyz1.X && item.X < boxCollider.Up.xyz3.X && item.Z > boxCollider.Up.xyz1.Z && item.Z < boxCollider.Up.xyz3.Z)
-                           && Math.Abs(item.Y - boxCollider.Down.xyz2.Y) < 0.6f)
+                        if ((item.Y >= boxCollider.Down.xyz2.Y && item.Y <= boxCollider.Up.xyz2.Y && item.X >= boxCollider.Up.xyz1.X && item.X <= boxCollider.Up.xyz3.X && item.Z >= boxCollider.Up.xyz1.Z && item.Z <= boxCollider.Up.xyz3.Z)
+                           && Math.Abs(item.Y - boxCollider.Down.xyz2.Y) < 0.2f)
                             return true;
                         break;
                     case TypePlane.Down:
-                        if ((item.Y >= boxCollider.Down.xyz2.Y && item.Y <= boxCollider.Up.xyz2.Y && item.X >= boxCollider.Up.xyz1.X && item.X <= boxCollider.Up.xyz3.X && item.Z >= boxCollider.Up.xyz1.Z && item.Z <= boxCollider.Up.xyz3.Z)
-                            && Math.Abs(item.Y - boxCollider.Up.xyz2.Y) < 0.6f)
+                        if ((item.Y >= boxCollider.Down.xyz2.Y && item.Y <= boxCollider.Up.xyz2.Y && item.X >=boxCollider.Up.xyz1.X && item.X <= boxCollider.Up.xyz3.X && item.Z >= boxCollider.Up.xyz1.Z && item.Z <=boxCollider.Up.xyz3.Z)
+                            && Math.Abs(item.Y - boxCollider.Up.xyz2.Y) < 0.2f)
                             return true;
                         break;
                     case TypePlane.Back:
-                    case TypePlane.Forward:
-                        if (item.Z >= boxCollider.Back.xyz2.Z && item.Z <= boxCollider.Forward.xyz2.Z && item.Y >= boxCollider.Back.xyz1.Y && item.Y <= boxCollider.Back.xyz3.Y && item.X >= boxCollider.Back.xyz1.X && item.X <= boxCollider.Back.xyz3.X)
+                        if ((item.Z >= boxCollider.Back.xyz2.Z && item.Z <= boxCollider.Forward.xyz2.Z && item.Y >= boxCollider.Back.xyz1.Y && item.Y <= boxCollider.Back.xyz3.Y && item.X >= boxCollider.Back.xyz1.X && item.X <= boxCollider.Back.xyz3.X)
+                          && Math.Abs(item.Z - boxCollider.Forward.xyz2.Z) < 0.2f)
                             return true;
                         break;
-
+                    case TypePlane.Forward:
+                        if ((item.Z >= boxCollider.Back.xyz2.Z && item.Z <= boxCollider.Forward.xyz2.Z && item.Y >= boxCollider.Back.xyz1.Y && item.Y <= boxCollider.Back.xyz3.Y && item.X >= boxCollider.Back.xyz1.X && item.X <= boxCollider.Back.xyz3.X)
+                            && Math.Abs(item.Z - boxCollider.Back.xyz2.Z) < 0.2f)
+                            return true;
+                        break;
+                    case TypePlane.Center:
+                        Vector3 position = boxCollider._worldObject.Position;
+                        if (vector3[0].X < position.X && position.X < vector3[1].X&& vector3[0].Z < position.Z && position.Z < vector3[1].Z&& vector3[0].Y < position.Y && position.Y < vector3[1].Y)
+                            return true;
+                        break;
 
                 }
             }
@@ -96,28 +112,17 @@ namespace NOVACHSERVERNETFRAMEWORK
                 HasCollisionPlane(TypePlane.Forward, ref vector3).Length != 0 ||
                 HasCollisionPlane(TypePlane.Back, ref vector3).Length != 0;
         }
-        public WorldObject[] HasAnyCollisionPlaneArray()
+        public Dictionary<TypePlane,WorldObject[]> HasAnyCollisionPlaneArray(Vector3 pos=null)
         {
             Vector3 vector3 = Vector3.Zero();
-            List<WorldObject[]> allWorldObjects = new List<WorldObject[]>();
-            allWorldObjects.Add(HasCollisionPlane(TypePlane.Up, ref vector3));
-            allWorldObjects.Add(HasCollisionPlane(TypePlane.Up, ref vector3));
-            allWorldObjects.Add(HasCollisionPlane(TypePlane.Down, ref vector3));
-            allWorldObjects.Add(HasCollisionPlane(TypePlane.Left, ref vector3));
-            allWorldObjects.Add(HasCollisionPlane(TypePlane.Right, ref vector3));
-            allWorldObjects.Add(HasCollisionPlane(TypePlane.Forward, ref vector3));
-            allWorldObjects.Add(HasCollisionPlane(TypePlane.Back, ref vector3));
-            List<WorldObject> result = new List<WorldObject>();
-            foreach (var item in allWorldObjects)
-            {
-
-                if (item == null)
-                    continue;
-                foreach (var item2 in item)
-                    result.Add(item2);
-            }
-            result=result.Distinct().ToList();
-            return result.ToArray();
+            Dictionary<TypePlane, WorldObject[]> allWorldObjects = new Dictionary<TypePlane, WorldObject[]>();
+            allWorldObjects.Add(TypePlane.Up,HasCollisionPlane(TypePlane.Up, ref vector3, pos));
+            allWorldObjects.Add(TypePlane.Down,HasCollisionPlane(TypePlane.Down, ref vector3, pos));
+            allWorldObjects.Add(TypePlane.Left,HasCollisionPlane(TypePlane.Left, ref vector3, pos));
+            allWorldObjects.Add(TypePlane.Right,HasCollisionPlane(TypePlane.Right, ref vector3, pos));
+            allWorldObjects.Add(TypePlane.Forward,HasCollisionPlane(TypePlane.Forward, ref vector3, pos));
+            allWorldObjects.Add(TypePlane.Back,HasCollisionPlane(TypePlane.Back, ref vector3, pos));
+            return allWorldObjects;
         }
         public WorldObject[] HasCollisionPlane(TypePlane typePlane,ref Vector3 resultPosition,Vector3 position=null)
         {
@@ -140,7 +145,7 @@ namespace NOVACHSERVERNETFRAMEWORK
                             BeetwenPlanes(boxCollider, typePlane, new Vector3[] { Right.xyz1, Right.xyz2, Right.xyz3, Right.xyz4 }))
                         {
                             worldObjects.Add(worldObject as WorldObject);
-                            resultPosition.X =boxCollider._worldObject.Position.X - boxCollider._worldObject.Scale.X/2 - _worldObject.Scale.X/2- 0.1f;
+                            resultPosition.X =boxCollider._worldObject.Position.X - boxCollider._worldObject.Scale.X/2 - _worldObject.Scale.X/2 - 0.1f;
                         }
                         break;
                     case TypePlane.Left:
@@ -157,7 +162,7 @@ namespace NOVACHSERVERNETFRAMEWORK
                             BeetwenPlanes(boxCollider, typePlane, new Vector3[] { Up.xyz1, Up.xyz2, Up.xyz3, Up.xyz4 }))
                         {
                             worldObjects.Add(worldObject as WorldObject);
-                            resultPosition.Y = boxCollider._worldObject.Position.Y - boxCollider._worldObject.Scale.Y / 2 - _worldObject.Scale.Y / 2-0.1f;
+                            resultPosition.Y = boxCollider._worldObject.Position.Y - boxCollider._worldObject.Scale.Y / 2 - _worldObject.Scale.Y / 2 - 0.1f;
                         }
                         break;
                     case TypePlane.Down:
@@ -165,7 +170,7 @@ namespace NOVACHSERVERNETFRAMEWORK
                             BeetwenPlanes(boxCollider, typePlane, new Vector3[] { Back.xyz1, Back.xyz2, Back.xyz3, Back.xyz4 }
                             ))
                         {
-                            resultPosition.Y = boxCollider._worldObject.Position.Y + boxCollider._worldObject.Scale.Y / 2 + _worldObject.Scale.Y / 2 + 0.1f;
+                            resultPosition.Y = boxCollider._worldObject.Position.Y + boxCollider._worldObject.Scale.Y / 2 + _worldObject.Scale.Y / 2+0.1f;
                             worldObjects.Add(worldObject as WorldObject);
                         }
                            
@@ -183,10 +188,17 @@ namespace NOVACHSERVERNETFRAMEWORK
                         if (BeetwenPlanes(this, typePlane, new Vector3[] { boxCollider.Back.xyz1, boxCollider.Back.xyz2, boxCollider.Back.xyz3, boxCollider.Back.xyz4 })||
                             BeetwenPlanes(boxCollider, typePlane, new Vector3[] { Forward.xyz1, Forward.xyz2, Forward.xyz3, Forward.xyz4 }))
                         {
-                            resultPosition.Z = boxCollider._worldObject.Position.Z - boxCollider._worldObject.Scale.Z / 2 - _worldObject.Scale.Z / 2 - 0.1f;
+                            resultPosition.Z = boxCollider._worldObject.Position.Z - boxCollider._worldObject.Scale.Z / 2 - _worldObject.Scale.Z / 2-0.1f;
                             worldObjects.Add(worldObject as WorldObject);
                         }
-                            
+                        break;
+                    case TypePlane.Center:
+                        if(BeetwenPlanes(this,typePlane,new Vector3[] {boxCollider.Back.xyz1, boxCollider.Forward.xyz3 }))
+                        {
+                            resultPosition.Y = boxCollider._worldObject.Position.Y + boxCollider._worldObject.Scale.Y / 2 + _worldObject.Scale.Y / 2 + 0.1f;
+
+                            worldObjects.Add(worldObject as WorldObject);
+                        }
                         break;
                     default:
                         break;

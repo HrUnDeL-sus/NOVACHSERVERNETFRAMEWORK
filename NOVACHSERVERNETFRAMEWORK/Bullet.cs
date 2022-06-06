@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NOVACHSERVERNETFRAMEWORK
 {
-    internal class Bullet:WorldObject,IBoxCollider
+    internal class Bullet:WorldObjectWithCollider
     {
         private const float SPEED = 4;
         private Timer _timerMove = new Timer(3);
@@ -43,22 +43,7 @@ namespace NOVACHSERVERNETFRAMEWORK
                 Kill();
                 return;
             }
-            bool hasCollision = false;
-            Vector3 resultPosition = Position + _moveVector;
-            while (Position > resultPosition ? Position > resultPosition : Position < resultPosition)
-            {
-                Position += _startMoveVector;
-                foreach (var item in _boxCollider.HasAnyCollisionPlaneArray())
-                {
-                    hasCollision = true;
-                    item.Damage(10);
-                }
-                if (hasCollision)
-                    Kill();
-
-            }
-            if(!hasCollision)
-            World.GetWorld().MoveWorldObject(this);
+          Position+= _moveVector;
         }
 
         public BoxCollider GetBoxCollider()
@@ -68,7 +53,21 @@ namespace NOVACHSERVERNETFRAMEWORK
 
         public void OnUpdatedBoxCollider()
         {
-            throw new NotImplementedException();
+           
+        }
+
+        protected override void OnUpdatedBoxCollider(TypePlane typePlane, WorldObject[] worldObjects)
+        {
+            bool hasCollision = false;
+            if (worldObjects == null)
+                return;
+            foreach (var item2 in worldObjects)
+            {
+                item2.Damage(10);
+                hasCollision = true;
+            }
+            if(hasCollision)
+                Kill();
         }
     }
 }

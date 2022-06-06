@@ -9,7 +9,7 @@ namespace NOVACHSERVERNETFRAMEWORK
     internal interface IBoxCollider
     {
          BoxCollider GetBoxCollider();
-        void OnUpdatedBoxCollider();
+   
 
     }
 }

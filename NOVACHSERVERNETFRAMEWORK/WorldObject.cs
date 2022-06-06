@@ -21,7 +21,19 @@ namespace NOVACHSERVERNETFRAMEWORK
     {
         Infinity=100000000
     }
-    abstract class WorldObject
+    internal class WorldObjectSort : IComparer<WorldObject>
+    {
+        public int Compare(WorldObject a, WorldObject b)
+        {
+            if (a.Position.Y > b.Position.Y)
+                return -1;
+            else if (a.Position.Y < b.Position.Y)
+                return 1;
+            else
+                return 0;
+        }
+    }
+   internal abstract class WorldObject
     {
         public readonly int UID;
         private int _health;
@@ -34,7 +46,7 @@ namespace NOVACHSERVERNETFRAMEWORK
                     OnKilled();
             }
         }
-        public Vector3 Position { get; protected set; }
+        public virtual Vector3 Position { get; protected set; }
         public  Vector3 Scale { get; protected set; }
         public Vector3 Rotate { get; protected set; }
         public  Vector3 Color { get; protected set; }
@@ -45,7 +57,6 @@ namespace NOVACHSERVERNETFRAMEWORK
         public WorldObject(TypeWorldObject get,int health)
         {
             Health = health;
-            Position = Vector3.Zero();
             Scale=Vector3.Zero();
             Rotate = Vector3.Zero();
             Color = Vector3.Zero();
@@ -54,6 +65,19 @@ namespace NOVACHSERVERNETFRAMEWORK
             Name = GetType().Name + UID;
             Console.WriteLine("NAME:{0}", Name);
             
+        }
+        protected Vector3 MathWathingVector()
+        {
+            if (Rotate.Y == -90)
+                return new Vector3(1, 0, 0);
+            else if (Rotate.Y == 90)
+                return new Vector3(-1, 0, 0);
+            else if (Rotate.Y == 0)
+                return new Vector3(0, 0, -1);
+            else if (Rotate.Y == 180)
+                return new Vector3(0, 0, 1);
+            else
+                return Vector3.Zero();
         }
         protected virtual void OnKilled()
         {

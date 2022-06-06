@@ -6,11 +6,13 @@ using System.Threading.Tasks;
 
 namespace NOVACHSERVERNETFRAMEWORK
 {
-    internal class Box : WorldObject,IBoxCollider
+    internal class Box :WorldObjectWithCollider
     {
         private Physics _physics = new Physics();
-        private BoxCollider _boxCollider;
+        private Timer _physicMaxFall = new Timer(10);
+        private Vector3 _pushVector = Vector3.Zero();
         public readonly bool IsPhysics = true;
+      
 
         public Box(Vector3 get,bool isPhysics) : base(TypeWorldObject.Box, 80)
         {
@@ -28,9 +30,13 @@ namespace NOVACHSERVERNETFRAMEWORK
                 Color.Y = 0.5f;
                 Color.Z = 0.4f;
             }
-            _boxCollider = new BoxCollider(this);
+       
             World.GetWorld().AddWorldObject(this);
 
+        }
+        public void Push(Vector3 moveVector)
+        {
+            Position += moveVector;
         }
         public override void OnMove()
         {
@@ -41,51 +47,19 @@ namespace NOVACHSERVERNETFRAMEWORK
         {
           
         }
-        public static void PushBoxs(WorldObject[] get,Vector3 vector3)
-        {
-            foreach (var item in get)
-            {
-                if (item is Box&&(item as Box).IsPhysics)
-                    (item as Box).Push(vector3);
-            }
-        }
-        public void Push(Vector3 pushVector3)
-        {
-            Vector3 vector3 = Vector3.Zero();
-            if (pushVector3.X > 0)
-                PushBoxs(_boxCollider.HasCollisionPlane(TypePlane.Right, ref vector3), pushVector3);
-            if (pushVector3.X < 0)
-                PushBoxs(_boxCollider.HasCollisionPlane(TypePlane.Left, ref vector3), pushVector3);
-            if (pushVector3.Z > 0)
-                PushBoxs(_boxCollider.HasCollisionPlane(TypePlane.Forward, ref vector3), pushVector3);
-            if (pushVector3.Z < 0)
-                PushBoxs(_boxCollider.HasCollisionPlane(TypePlane.Back, ref vector3), pushVector3);
-            Position -= pushVector3;
-            World.GetWorld().MoveWorldObject(this);
-        }
         public override void OnUpdated()
         {
             if (!IsPhysics)
                 return;
             Vector3 fallVector = Position;
-            if (_boxCollider.HasCollisionPlane(TypePlane.Down, ref fallVector).Length == 0 && _physics.Fall(ref fallVector))
-            {
+            if (_physics.Fall(ref fallVector))
                 Position = fallVector;
-                _boxCollider.HasCollisionPlane(TypePlane.Down, ref fallVector);
-                Position = fallVector;
-                World.GetWorld().MoveWorldObject(this);
-
-            }
         }
 
-        BoxCollider IBoxCollider.GetBoxCollider()
+        protected override void OnUpdatedBoxCollider(TypePlane typePlane,WorldObject[] worldObjects)
         {
-            return _boxCollider;
-        }
-
-        void IBoxCollider.OnUpdatedBoxCollider()
-        {
-            throw new NotImplementedException();
+            if (typePlane == TypePlane.Center)
+                Kill();
         }
     }
 }

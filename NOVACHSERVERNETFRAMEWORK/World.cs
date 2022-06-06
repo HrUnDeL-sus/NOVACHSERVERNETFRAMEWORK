@@ -94,6 +94,7 @@ namespace NOVACHSERVERNETFRAMEWORK
         {
             if(_worldObjects.Contains(worldObject))
             OnUpdateStackWorldObjects?.Invoke(new StackWorldObject(worldObject, StateWorldObjectInStack.Updated));
+            _worldObjects.Sort(new WorldObjectSort());
         }
         public void AddWorldObject(WorldObject worldObject)
         {
@@ -109,7 +110,7 @@ namespace NOVACHSERVERNETFRAMEWORK
             OnMoved += _worldObjects[_worldObjects.Count - 1].OnMove;
             OnScaled += _worldObjects[_worldObjects.Count - 1].OnScale;
             OnUpdated += _worldObjects[_worldObjects.Count - 1].OnUpdated;
-          
+            _worldObjects.Sort(new WorldObjectSort());
         }
         private void ClientErrorHasOccurred(Exception e,Client client)
         {
@@ -122,6 +123,7 @@ namespace NOVACHSERVERNETFRAMEWORK
             {
 
                 OnUpdated?.Invoke();
+               
             }
         }
     }

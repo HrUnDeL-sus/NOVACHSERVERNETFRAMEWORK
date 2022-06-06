@@ -20,28 +20,29 @@ namespace NOVACHSERVERNETFRAMEWORK
         SetBlock,
         Shot
     }
-    internal class Player : WorldObject,IBoxCollider
+    internal class Player : WorldObjectWithCollider
     {
         private Timer _timerJump=new Timer(3);
+        private bool _canJump = false;
         private bool _isJump = false;
         private Physics _physics = new Physics();
-        private Timer _jumpTimer = new Timer(5);
-        private Timer _timerMove = new Timer(3);
-        private Timer _timerMoveMax = new Timer(100);
+        private Timer _jumpTimer = new Timer(3);
+        private Timer _timerMove = new Timer(1);
+        private Timer _timerMoveMax = new Timer(40);
+      
         private Timer _timerActive = new Timer(15);
         private Vector3 _moveSpeed = Vector3.One()*0.5f;
         private float _jumpDistanceY = 5;
         private const float MAX_JUMP_DISTANCE_Y = 5;
         public TypeBlock SelectedBlock { get; protected set; }
         public ActiveAction MyActiveAction { get; protected set; }
-        private BoxCollider _boxCollider;
         public Player():base(TypeWorldObject.Player, 100)
         {
                 Random random = new Random();
             Position = Vector3.Zero();
                 Color.X = (float)random.NextDouble();
                 Color.Z = (float)random.NextDouble();
-            _boxCollider = new BoxCollider(this);
+          
             Scale = Vector3.One();
             MyActiveAction = ActiveAction.SetBlock;
             SelectedBlock = TypeBlock.Sand;
@@ -68,34 +69,23 @@ namespace NOVACHSERVERNETFRAMEWORK
         }
         protected void IsJump(bool n)
         {
-            if (!_isJump&&_jumpTimer.TimeIsUp())
+            Vector3 vector3 = Vector3.Zero();
+            if (!_isJump&&_jumpTimer.TimeIsUp()&& _canJump)
             {
                     _isJump = n;
             }
         }
-        private Vector3 MathWathingVector()
-        {
-            if (Rotate.Y == -90)
-                return new Vector3(1, 0, 0);
-            else if (Rotate.Y == 90)
-                return new Vector3(-1, 0, 0);
-            else if (Rotate.Y == 0)
-                return new Vector3(0, 0, -1);
-            else if (Rotate.Y == 180)
-               return new Vector3(0, 0, 1);
-            else
-                return Vector3.Zero();
-        }
+       
         private void SetBlock(TypeBlock typeBlock)
         {
             if (Rotate.Y == -90)
-                new Box(Position + new Vector3(2, typeBlock == TypeBlock.Sand?0:-1, 0), typeBlock==TypeBlock.Sand);
+                new Box(Position + new Vector3(2, typeBlock == TypeBlock.Sand?2:-1, 0), typeBlock==TypeBlock.Sand);
             else if (Rotate.Y == 90)
-                new Box(Position - new Vector3(2, typeBlock == TypeBlock.Sand ? 0 : 1, 0), typeBlock == TypeBlock.Sand);
+                new Box(Position - new Vector3(2, typeBlock == TypeBlock.Sand ? -2 : 1, 0), typeBlock == TypeBlock.Sand);
             else if (Rotate.Y == 0)
-                new Box(Position - new Vector3(0, typeBlock == TypeBlock.Sand ? 0 : 1, 2), typeBlock == TypeBlock.Sand);
+                new Box(Position - new Vector3(0, typeBlock == TypeBlock.Sand ? -2 : 1, 2), typeBlock == TypeBlock.Sand);
             else if (Rotate.Y == 180)
-                new Box(Position + new Vector3(0, typeBlock == TypeBlock.Sand ? 0 : -1, 2), typeBlock == TypeBlock.Sand);
+                new Box(Position + new Vector3(0, typeBlock == TypeBlock.Sand ? 2 : -1, 2), typeBlock == TypeBlock.Sand);
         }
         public int GetActiveAction()
         {
@@ -121,12 +111,10 @@ namespace NOVACHSERVERNETFRAMEWORK
 
         protected void Move(Vector3 position,Vector3 rotation)
         {
-            
-                if (!_timerMove.TimeIsUp())
-                {
-                    return;
-                }
-              
+            if (!_timerMove.TimeIsUp())
+            {
+                return;
+            }
            
                 Vector3 pushVector = position;
                 position *= _moveSpeed;
@@ -134,21 +122,6 @@ namespace NOVACHSERVERNETFRAMEWORK
                 Position += position;
 
                 Rotate = rotation;
-                Vector3 test = Position;
-
-                if (position.X > 0)
-                    Box.PushBoxs(_boxCollider.HasCollisionPlane(TypePlane.Right, ref test), pushVector * -0.1f);
-                if (position.X < 0)
-                    Box.PushBoxs(_boxCollider.HasCollisionPlane(TypePlane.Left, ref test), pushVector * -0.1f);
-                if (position.Z > 0)
-                    Box.PushBoxs(_boxCollider.HasCollisionPlane(TypePlane.Forward, ref test), pushVector * -0.1f);
-                if (position.Z < 0)
-                    Box.PushBoxs(_boxCollider.HasCollisionPlane(TypePlane.Back, ref test), pushVector * -0.1f);
-                Position = test;
-            if (!_timerMoveMax.TimeIsUp())
-                World.GetWorld().MoveWorldObject(this);
-           
-           
         }
         private void UpdateJump()
         {
@@ -162,32 +135,30 @@ namespace NOVACHSERVERNETFRAMEWORK
                 Vector3 jumpVector = Position;
                 _jumpDistanceY -= Math.Abs(speed);
 
-                if (_boxCollider.HasCollisionPlane(TypePlane.Down, ref jumpVector).Length != 0 || _jumpDistanceY <= -MAX_JUMP_DISTANCE_Y)
+                if ( _jumpDistanceY <= -MAX_JUMP_DISTANCE_Y)
                 {
 
                     _jumpDistanceY = MAX_JUMP_DISTANCE_Y;
                     _isJump = false;
                 }
                 Position = jumpVector;
-                World.GetWorld().MoveWorldObject(this);
+             
             }
         }
         protected void Update()
         {
             Vector3 fallVector = Position;
+            Vector3 vector3 = Vector3.Zero();
             UpdateJump();
             if (Position.Y < -50)
             {
+                CheckCollision = false;
                 Position = Vector3.Zero();
-                World.GetWorld().MoveWorldObject(this);
             }
                 
-            if (!_isJump&&_physics.Fall(ref fallVector))
-            {
+
+            if (!_isJump &&_physics.Fall(ref fallVector))
                 Position = fallVector;
-                if(_boxCollider.HasCollisionPlane(TypePlane.Down, ref fallVector).Length == 0)
-                    World.GetWorld().MoveWorldObject(this);
-            }
 
         }
 
@@ -202,14 +173,21 @@ namespace NOVACHSERVERNETFRAMEWORK
             throw new NotImplementedException();
         }
 
-        BoxCollider IBoxCollider.GetBoxCollider()
+        protected override void OnUpdatedBoxCollider(TypePlane typePlane,WorldObject[] worldObjects)
         {
-           return _boxCollider;
-        }
-
-        void IBoxCollider.OnUpdatedBoxCollider()
-        {
-            throw new NotImplementedException();
+            if (typePlane == TypePlane.Down)
+                _canJump = true;
+            else
+                _canJump = false;
+            if (worldObjects == null)
+                return;
+            foreach (var item in worldObjects)
+            {
+                if(item is Box&&typePlane!=TypePlane.Down)
+                {
+                    (item as Box).Push(MathWathingVector());
+                }
+            }
         }
     }
 }

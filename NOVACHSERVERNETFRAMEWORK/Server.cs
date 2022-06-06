@@ -14,33 +14,34 @@ namespace NOVACHSERVERNETFRAMEWORK
         private UdpClient _udpClient;
         private const int UDP_PORT = 1243;
         private int _countUDPClient = 0;
-        private const int MAX_COUNT_UDP_CLIENT = 5;
+        private const int MAX_COUNT_UDP_CLIENT = 10;
+        
        public void Start()
         {
             _udpClient = new UdpClient(UDP_PORT);
             while (true)
             {
-                if (_countUDPClient != MAX_COUNT_UDP_CLIENT)
+                if (_countUDPClient <= MAX_COUNT_UDP_CLIENT)
                 {
-                    _udpClient.BeginReceive(EndReceive, null);
                     _countUDPClient += 1;
+                    _udpClient.BeginReceive(EndReceive, null);
                 }
-                Thread.Sleep(1);
-
-
+               
+                     
             }
         }
-        private void EndReceive(IAsyncResult res)
+        private void EndReceive(IAsyncResult asyncResult)
         {
             IPEndPoint iPEndPoint = default;
-           int state=BitConverter.ToInt32(_udpClient.EndReceive(res, ref iPEndPoint),0);
+            byte[] data = _udpClient.EndReceive(asyncResult, ref iPEndPoint);
+            int state=BitConverter.ToInt32(data,0);
             Client client = World.GetWorld().GetClient(iPEndPoint);
             if ( client == null)
             {
-                client = new Client(iPEndPoint);
+                client = new Client(iPEndPoint, state);
                 World.GetWorld().AddWorldObject(client);
             }
-            if(client!=null)
+            if (client != null)
                 client.ReadState(state, _udpClient);
             _countUDPClient -= 1;
         }

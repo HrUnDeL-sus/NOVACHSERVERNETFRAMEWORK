@@ -40,32 +40,41 @@ namespace NOVACHSERVERNETFRAMEWORK
         private Stack<StackWorldObject> _stackWorldObjects=new Stack<StackWorldObject>();
         public readonly IPEndPoint MyIpEndPoint;
         private Timer _timerActive;
+        private object _obj=new object();
+        private int _maxDataReceive;
+        private long _sped = 0;
+        private int _count = 0;
         public bool CanBeginRead { get; private set; }
-        public Client(IPEndPoint iPEndPoint)
+        public Client(IPEndPoint iPEndPoint,int maxDataReceive)
         {
+            _maxDataReceive = maxDataReceive;
             MyIpEndPoint = iPEndPoint;
             OnClientError += HasClientError;
-            _timerActive = new Timer(250);
+            _timerActive = new Timer(500);
             CanWrite = true;
         }
         public void UpdateStackWorldObjects(StackWorldObject stackWorldObject)
         {
-           if(_stackWorldObjects.Count>=0)
-            _stackWorldObjects.Push(stackWorldObject);
+                if (_stackWorldObjects.Count >= 0)
+                {
+                    _stackWorldObjects.Push(stackWorldObject);
+                Console.WriteLine("Item:{0} Type:{1} Count:{2}", stackWorldObject.WorldObject.Name, stackWorldObject.WorldObjectInStack, _stackWorldObjects.Count);
+
+                }
+            
         }
-        private List<float[]> GetDataStackObjectForRendering()
+        private float[] GetDataStackObjectForRendering(int maxCount)
         {
           
-            List<float[]> vs2 = new List<float[]>();
+          
             Stack<StackWorldObject> _localStack = _stackWorldObjects;
-            
-            while (_localStack.Count != 0)
+            List<float> vs = new List<float>();
+            int count = 0;
+            while (_localStack.Count != 0&&count!=maxCount)
             {
-                List<float> vs = new List<float>();
+                
                 StackWorldObject stackWorldObject = _localStack.Pop();
-                if (stackWorldObject == null)
-                    continue;
-                 WorldObject obj = stackWorldObject.WorldObject;
+                WorldObject obj = stackWorldObject.WorldObject;
                 vs.Add((int)stackWorldObject.WorldObjectInStack);
                 vs.Add(obj.Position.X);
                 vs.Add(obj.Position.Y);
@@ -86,11 +95,16 @@ namespace NOVACHSERVERNETFRAMEWORK
                     vs.Add((stackWorldObject.WorldObject as Player).GetActiveAction());
                 else
                     vs.Add(-1);
-                vs2.Add(vs.ToArray());
-
+                count += 16;
             }
-          
-            return vs2;
+            if(count!=maxCount)
+                for (int i = 0; i < maxCount-count; i++)
+                {
+                    vs.Add(0);
+                }
+            return vs.ToArray();
+
+
         }
         private void HasClientError(Exception exception,Client client)
         {
@@ -122,41 +136,45 @@ namespace NOVACHSERVERNETFRAMEWORK
                 switch (state)
                 {
                     case (int)ClientAction.RenderingWorld:
-                           List<float[]> floatArrays = GetDataStackObjectForRendering();
-                        udpClient.SendAsync(new float[] {Position.X,Position.Y,Position.Z}, MyIpEndPoint);
-                        for(int i = 0; i < floatArrays.Count; i += 1)
-                        {
-                            udpClient.SendAsync(floatArrays[i], MyIpEndPoint);
-                        }
-                        udpClient.SendAsync(new float[16], MyIpEndPoint);
+                          float[] floatArray = GetDataStackObjectForRendering(_maxDataReceive);
+                        udpClient.Send(new float[] {Position.X,Position.Y,Position.Z}, MyIpEndPoint);
+                        udpClient.Send(floatArray, MyIpEndPoint);
                         //     Update();
                         break;
                     case (int)ClientAction.MoveForward:
                         Move(new Vector3(0, 0, 1), new Vector3(0, 180, 0));
+                        udpClient.Send(1,MyIpEndPoint);
                         break;
                     case (int)ClientAction.MoveBack:
                         Move(new Vector3(0, 0, -1), Vector3.Zero());
+                        udpClient.Send(1, MyIpEndPoint);
                         break;
                     case (int)ClientAction.MoveLeft:
                         Move(new Vector3(-1, 0, 0),new Vector3(0,90,0));
+                        udpClient.Send(1, MyIpEndPoint);
                         break;
                     case (int)ClientAction.MoveRight:
                         Move(new Vector3(1, 0, 0), new Vector3(0, -90, 0));
+                        udpClient.Send(1, MyIpEndPoint);
                         break;
                     case (int)ClientAction.RotateLeft:
                         Rotation(new Vector3(0, 90, 0));
+                        udpClient.Send(1, MyIpEndPoint);
                         break;
                     case (int)ClientAction.RotateRight:
                         Rotation(new Vector3(0, -90, 0));
+                        udpClient.Send(1, MyIpEndPoint);
                         break;
                     case (int)ClientAction.Action:
                         PerformAnAction();
+                        udpClient.Send(1, MyIpEndPoint);
                         break;
                     case (int)ClientAction.GetCameraPosition:
                         
                        break;
                     case (int)ClientAction.Jump:
                         IsJump(true);
+                        udpClient.Send(1, MyIpEndPoint);
                         break;
                     default:
                         if (state >= 40 && state < 42)
@@ -170,7 +188,7 @@ namespace NOVACHSERVERNETFRAMEWORK
                             MyActiveAction = ActiveAction.Shot;
                             World.GetWorld().MoveWorldObject(this);
                         }
-                            
+                        udpClient.Send(1, MyIpEndPoint);
                         break;
 
                 }
@@ -179,8 +197,10 @@ namespace NOVACHSERVERNETFRAMEWORK
                 stopwatch.Stop();
                
                 TimeSpan ts = stopwatch.Elapsed;
-               
-                    Console.WriteLine("{0} time:{1}\n Action:{2}\n", Name, ts.Ticks, (ClientAction)state);
+                _count += 1;
+                _sped += ts.Ticks;
+            
+                _timerActive.Restart();
                 CanWrite = true;
               
             }
